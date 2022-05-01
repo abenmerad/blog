@@ -1,7 +1,7 @@
 import jsonwebtoken from "jsonwebtoken"
 import config from "../config.js"
 
-const auth = (req, res, next) => {
+const authentication = (req, res, next) => {
   const {
     headers: { authentication: jwt },
   } = req
@@ -18,7 +18,7 @@ const auth = (req, res, next) => {
       return
     }
 
-    res.status(500).send({ error: "an internal error has occured" })
+    res.status(500).send({ error: "An internal error has occured" })
   }
 }
-export default auth
+export default authentication
