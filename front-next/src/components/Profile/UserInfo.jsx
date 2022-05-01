@@ -1,6 +1,5 @@
 import Image from "next/image"
 import Button from "@components/Form/Button"
-import { FaUserEdit } from "react-icons/fa"
 import { useContext, useState } from "react"
 import { AppContext } from "@components/Context/AppContext"
 import { MdDelete } from "react-icons/md"

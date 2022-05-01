@@ -1,13 +1,7 @@
-import Image from "next/image"
-import { useRouter } from "next/router"
-import { AppContext } from "@components/Context/AppContext"
-import useApi from "src/hooks/useApi"
-import { useContext, useState, useEffect } from "react"
-import Link from "next/link"
+import { useState } from "react"
 import AboutUs from "@components/Posts/AboutUs"
 import PostSection from "@components/Posts/PostSection"
 import ErrorBox from "@components/Misc/ErrorBox"
-import { makeClient } from "@services/makeClient"
 
 export const getServerSideProps = async (context) => {
   const { params } = context

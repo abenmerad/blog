@@ -1,4 +1,3 @@
-import Link from "next/link"
 import { MdAccountCircle } from "react-icons/md"
 import NavbarField from "./NavbarField.jsx"
 import { useContext } from "react"

@@ -1,8 +1,6 @@
 import { BiLogOut } from "react-icons/bi"
-import Button from "@components/Form/Button"
 import { useContext, useState } from "react"
 import { AppContext } from "@components/Context/AppContext"
-import Link from "next/link"
 import { useRouter } from "next/router"
 import RemoveUserModal from "@components/Modal/RemoveUserModal"
 

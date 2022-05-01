@@ -1,6 +1,5 @@
 import Post from "./Post"
 import useApi from "src/hooks/useApi"
-import { useState } from "react"
 import ErrorBox from "@components/Misc/ErrorBox"
 const SetPosts = (props) => {
   const { userId } = props

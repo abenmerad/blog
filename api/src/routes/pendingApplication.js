@@ -97,7 +97,6 @@ const pendingApplicationRoute = ({ app }) => {
     const {
       body: { userId },
     } = req
-    console.log({ userId })
     try {
       const user = UsersModel.query().findById(userId)
 
@@ -113,7 +112,6 @@ const pendingApplicationRoute = ({ app }) => {
         })
       res.send(pendingDemand)
     } catch (err) {
-      console.log({ err })
       res.status(401).send({ message: err.message })
     }
   })
@@ -124,8 +122,6 @@ const pendingApplicationRoute = ({ app }) => {
     } = req
 
     try {
-      console.log({ userId, sessionUserId })
-
       if (Number(userId) !== sessionUserId) {
         res.status(401).send({ message: "Session mismatching" })
 
@@ -152,10 +148,8 @@ const pendingApplicationRoute = ({ app }) => {
 
         return
       }
-      console.log(application)
       res.send(application)
     } catch (err) {
-      console.log(err)
       res.status(401).send({ message: err.message })
     }
   })

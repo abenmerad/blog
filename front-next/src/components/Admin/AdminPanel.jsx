@@ -5,7 +5,7 @@ import Link from "next/link"
 import { makeClient } from "@services/makeClient"
 import { AppContext } from "@components/Context/AppContext"
 import { useState, useContext } from "react"
-import ErrorBox from "@components/Misc/ErrorBox"
+
 const AdminPanel = () => {
   const [err, data] = useApi("get", "/applications")
   const [applicationState, setApplicationState] = useState(data)

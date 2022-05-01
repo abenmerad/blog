@@ -1,14 +1,19 @@
 import UsersModel from "../models/users.js"
 import authentication from "../middleware/authentication.js"
 import checkSession from "../middleware/checkSession.js"
-import PendingApplicationModel from "../models/pendingAuthorDemand.js"
 import CommentsModel from "../models/comments.js"
 import PostsModel from "../models/posts.js"
 
 const usersRoute = ({ app }) => {
   app.get("/users", async (req, res) => {
-    const users = await UsersModel.query()
-    res.send(users)
+    try {
+      const users = await UsersModel.query()
+        .select("users.id", "email", "displayName", "rights.label as right")
+        .join("rights", "rights.id", "users.rightId")
+      res.send(users)
+    } catch (err) {
+      res.status(400).send({ message: err.message })
+    }
   })
 
   app.get("/users/:userId", async (req, res) => {
@@ -153,8 +158,7 @@ const usersRoute = ({ app }) => {
         res.status(400).send({ message: "An error has occured" })
       }
 
-      const user = await UsersModel.query().deleteById(userId)
-      console.log(user)
+      await UsersModel.query().deleteById(userId)
       res.send({ message: "User deleted successfully" })
     } catch (err) {
       res.status(400).send({ message: err.message })

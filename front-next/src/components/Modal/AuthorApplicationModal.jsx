@@ -3,7 +3,6 @@ import { useContext } from "react"
 import { makeClient } from "@services/makeClient.js"
 import { AppContext } from "@components/Context/AppContext"
 import useApi from "src/hooks/useApi"
-import ErrorBox from "@components/Misc/ErrorBox"
 
 const AuthorApplicationModal = (props) => {
   const { toggleModal, userInfo } = props

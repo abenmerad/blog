@@ -11,13 +11,14 @@ const postsRoute = ({ app }) => {
     } = req
 
     try {
-      const user = PostsModel.query().findOne({ userId })
+      const user = UsersModel.query().findOne({ userId })
 
       if (!user) {
         res.status(401).send({ error: "User not found" })
 
         return
       }
+
       const post = await PostsModel.query().insertAndFetch({
         title,
         description,
@@ -154,7 +155,7 @@ const postsRoute = ({ app }) => {
         return
       }
 
-      const deletedPost = await PostsModel.query().deleteById(postId)
+      await PostsModel.query().deleteById(postId)
       res.send({ message: "Post deleted successfully." })
     } catch (message) {
       res.send(message)
