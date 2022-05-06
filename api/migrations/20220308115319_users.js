@@ -10,7 +10,12 @@ export const up = async (knex) => {
     table.text("label").notNullable().unique()
   })
   await knex
-    .insert([{ label: "reader" }, { label: "author" }, { label: "admin" }])
+    .insert([
+      { label: "reader" },
+      { label: "author" },
+      { label: "admin" },
+      { label: "banned" },
+    ])
     .into("rights")
 
   await knex.schema.createTable("users", (table) => {

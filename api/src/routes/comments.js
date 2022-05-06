@@ -17,7 +17,6 @@ const commentsRoute = ({ app }) => {
 
       res.send(comment)
     } catch (err) {
-      console.log(err)
       res.status(400).send({ message: err.message })
     }
   })

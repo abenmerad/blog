@@ -9,43 +9,54 @@ const authenticationRoute = ({ app }) => {
       body: { email, password },
     } = req
 
-    if (!email || !password) {
-      res.status(401).send({ message: "email or password invalid" })
+    try {
+      if (!email || !password) {
+        res.status(401).send({ message: "email or password invalid" })
 
-      return
-    }
+        return
+      }
 
-    const user = await UsersModel.query()
-      .select(
-        "users.id",
-        "email",
-        "displayName",
-        "passwordHash",
-        "passwordSalt",
-        "rights.label as right"
+      const user = await UsersModel.query()
+        .select(
+          "users.id",
+          "email",
+          "displayName",
+          "passwordHash",
+          "passwordSalt",
+          "rights.label as right"
+        )
+        .join("rights", "rights.id", "users.rightId")
+        .findOne({ email })
+
+      if (user.right === "banned") {
+        res
+          .send(401)
+          .send({ message: "Your account has been banned. You can't connect" })
+
+        return
+      }
+      if (!user) {
+        res.status(401).send({ message: "email or password invalid" })
+
+        return
+      }
+      const [hashedPassword] = hashPassword(password, user.passwordSalt)
+      if (hashedPassword != user.passwordHash) {
+        res.status(401).send({ message: "email or password invalid" })
+
+        return
+      }
+
+      const jwt = jsonwebtoken.sign(
+        { payload: { userId: user.id } },
+        config.security.session.secret,
+        { expiresIn: config.security.session.expiresIn }
       )
-      .join("rights", "rights.id", "users.rightId")
-      .findOne({ email })
 
-    if (!user) {
-      res.status(401).send({ message: "email or password invalid" })
-
-      return
+      res.send({ sessionUserId: user.id, jwt, userRight: user.right })
+    } catch (err) {
+      res.status(400).send({ message: err.message })
     }
-    const [hashedPassword] = hashPassword(password, user.passwordSalt)
-    if (hashedPassword != user.passwordHash) {
-      res.status(401).send({ message: "email or password invalid" })
-
-      return
-    }
-
-    const jwt = jsonwebtoken.sign(
-      { payload: { userId: user.id } },
-      config.security.session.secret,
-      { expiresIn: config.security.session.expiresIn }
-    )
-
-    res.send({ sessionUserId: user.id, jwt, userRight: user.right })
   })
 
   app.post("/sign-up", async (req, res) => {

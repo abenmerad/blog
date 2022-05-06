@@ -1,6 +1,5 @@
 import UsersModel from "../models/users.js"
 import authentication from "../middleware/authentication.js"
-import checkSession from "../middleware/checkSession.js"
 import CommentsModel from "../models/comments.js"
 import PostsModel from "../models/posts.js"
 
@@ -21,7 +20,7 @@ const usersRoute = ({ app }) => {
       params: { userId },
     } = req
 
-    if (typeof userId === "undefined") {
+    if (userId === "null") {
       return
     }
 
@@ -29,16 +28,16 @@ const usersRoute = ({ app }) => {
       const user = await UsersModel.query()
         .select("users.id", "email", "displayName", "rights.label as right")
         .join("rights", "rights.id", "users.rightId")
-        .findById(Number(userId))
+        .findById(userId)
 
       if (!user) {
-        res.status(404).send({ message: "An error has occured" })
+        res.status(404).send({ message: "User not found" })
 
         return
       }
       res.send(user)
     } catch (err) {
-      res.status(400).send({ message: err.message })
+      res.status(404).send({ message: err.message })
     }
   })
 
@@ -46,6 +45,10 @@ const usersRoute = ({ app }) => {
     const {
       params: { userId },
     } = req
+
+    if (!userId.length) {
+      return
+    }
 
     try {
       const comments = await CommentsModel.query()
@@ -67,34 +70,37 @@ const usersRoute = ({ app }) => {
     }
   })
 
-  app.get("/users/:userId/posts", async (req, res) => {
+  app.get("/users/:userId/posts/:statePost", async (req, res) => {
     const {
-      params: { userId },
+      params: { userId, statePost },
     } = req
-
     try {
       const posts = await PostsModel.query()
-        .where({ userId })
         .select(
           "posts.id",
           "title",
           "createdAt",
           "description",
           "userId",
-          "users.displayName as author"
+          "users.displayName as author",
+          "statePosts.label as statePost"
         )
-        .orderBy("posts.id", "desc")
         .join("users", "users.id", "posts.userId")
+        .join("statePosts", "statePosts.id", "posts.statePostId")
+        .where("statePosts.label", statePost)
+        .where({ userId })
+        .orderBy("posts.id", "desc")
 
       res.send(posts)
     } catch (err) {
       res.status(400).send({ message: err.message })
     }
   })
-  app.put("/users/:userId", authentication, checkSession, async (req, res) => {
+
+  app.put("/users/:userId", authentication, async (req, res) => {
     const {
       params: { userId },
-      body: { email, displayName, password },
+      body: { email, displayName, password, rightId },
     } = req
 
     if (typeof userId === "undefined") {
@@ -103,30 +109,27 @@ const usersRoute = ({ app }) => {
 
     try {
       const user = await UsersModel.query().findById(userId)
-      const payload = {}
+
       if (!user) {
         res.status(404).send({ message: "User not found." })
 
         return
       }
 
-      if (password.length) {
-        const [passwordHash, passwordSalt] = hashPassword(password)
-        payload.passwordHash = passwordHash
-        payload.passwordSalt = passwordSalt
-      }
+      let payload = Object.assign(
+        {},
+        password && { password },
+        displayName && { displayName },
+        email && { email },
+        rightId && { rightId },
+        password && { password }
+      )
 
-      if (email.length) {
-        payload.email = email
-      }
-
-      if (displayName.length) {
-        payload.displayName = displayName
-      }
       const updatedUser = await UsersModel.query().updateAndFetchById(
-        user.id,
+        userId,
         payload
       )
+
       const fetchedUser = await UsersModel.query()
         .select("users.id", "email", "displayName", "rights.label as right")
         .join("rights", "rights.id", "users.rightId")
@@ -156,6 +159,14 @@ const usersRoute = ({ app }) => {
 
       if (sessionUserId !== Number(userId) && senderUser.right !== "admin") {
         res.status(400).send({ message: "An error has occured" })
+      }
+
+      const userToDelete = await UsersModel.query().findById(userId)
+
+      if (userToDelete.rightId === 3) {
+        res.status(401).send({ message: "Cannot delete Admin." })
+
+        return
       }
 
       await UsersModel.query().deleteById(userId)

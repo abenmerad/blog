@@ -13,7 +13,6 @@ const pendingApplicationRoute = ({ app }) => {
           "users.displayName as author"
         )
         .join("users", "users.id", "pendingAuthorDemand.userId")
-
       res.send(applications)
     } catch (err) {
       res.status(400).send({ message: err.message })

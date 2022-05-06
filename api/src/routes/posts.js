@@ -7,15 +7,14 @@ import UsersModel from "../models/users.js"
 const postsRoute = ({ app }) => {
   app.post("/posts", authentication, checkSession, async (req, res) => {
     const {
-      body: { title, description, userId },
+      body: { title, description, userId, statePostId },
     } = req
 
     try {
-      const user = UsersModel.query().findOne({ userId })
+      const user = await UsersModel.query().findById(userId)
 
       if (!user) {
         res.status(401).send({ error: "User not found" })
-
         return
       }
 
@@ -23,8 +22,8 @@ const postsRoute = ({ app }) => {
         title,
         description,
         userId,
+        statePostId,
       })
-
       res.send(post)
     } catch (err) {
       res.send({ message: err.message })
@@ -42,13 +41,33 @@ const postsRoute = ({ app }) => {
           "userId",
           "users.displayName as author"
         )
-        .orderBy("posts.id", "desc")
         .join("users", "users.id", "posts.userId")
-      if (!posts) {
-        res.status(404).send({ message: "Post not found" })
+        .orderBy("posts.id", "desc")
+      res.send(posts)
+    } catch (err) {
+      res.status(400).send({ message: err.message })
+    }
+  })
 
-        return
-      }
+  app.get("/posts/:statePost", async (req, res) => {
+    const {
+      params: { statePost },
+    } = req
+    try {
+      const posts = await PostsModel.query()
+        .join("users", "users.id", "posts.userId")
+        .join("statePosts", "statePosts.id", "posts.statePostId")
+        .select(
+          "posts.id",
+          "title",
+          "createdAt",
+          "description",
+          "userId",
+          "users.displayName as author",
+          "statePosts.label as statePost"
+        )
+        .where("statePosts.label", statePost)
+        .orderBy("posts.id", "desc")
 
       res.send(posts)
     } catch (err) {
@@ -56,7 +75,7 @@ const postsRoute = ({ app }) => {
     }
   })
 
-  app.get("/posts/:postId", async (req, res) => {
+  app.get("/post/:postId", async (req, res) => {
     const {
       params: { postId },
     } = req
@@ -72,17 +91,18 @@ const postsRoute = ({ app }) => {
           "createdAt",
           "description",
           "userId",
-          "users.displayName as author"
+          "users.displayName as author",
+          "statePosts.label as statePost"
         )
         .join("users", "users.id", "posts.userId")
-        .findById(Number(postId))
+        .join("statePosts", "statePosts.id", "posts.statePostId")
+        .findById(postId)
 
       if (!post) {
         res.status(404).send({ message: "Post not found" })
 
         return
       }
-
       res.send(post)
     } catch (err) {
       res.status(400).send({ message: err.message })
@@ -92,13 +112,12 @@ const postsRoute = ({ app }) => {
   app.put("/posts/:postId", authentication, async (req, res) => {
     const {
       params: { postId },
-      body: { title, description, userId },
+      body: { title, description, userId, statePostId, createdAt },
       session: { userId: sessionUserId },
     } = req
 
     try {
       const post = await PostsModel.query().findById(postId)
-      const payload = {}
       const senderUser = await UsersModel.query()
         .select("rights.label as right")
         .join("rights", "rights.id", "users.rightId")
@@ -110,23 +129,32 @@ const postsRoute = ({ app }) => {
         return
       }
 
-      payload.userId = post.userId
-
-      if (title.length) {
-        payload.title = title
-      }
-
-      if (description.length) {
-        payload.description = description
-      }
-      const updatedPost = await PostsModel.query().updateAndFetchById(
-        postId,
-        payload
+      let payload = Object.assign(
+        {},
+        title && { title },
+        description && { description },
+        statePostId && { statePostId }
       )
+
+      await PostsModel.query().updateAndFetchById(postId, payload)
+
+      const updatedPost = await PostsModel.query()
+        .select(
+          "posts.id",
+          "title",
+          "createdAt",
+          "description",
+          "userId",
+          "users.displayName as author",
+          "statePosts.label as statePost"
+        )
+        .join("users", "users.id", "posts.userId")
+        .join("statePosts", "statePosts.id", "posts.statePostId")
+        .findById(postId)
 
       res.send(updatedPost)
     } catch (err) {
-      res.send(400).send({ message: err.message })
+      res.status(400).send({ message: err.message })
     }
   })
 
