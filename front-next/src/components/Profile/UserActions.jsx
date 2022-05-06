@@ -2,16 +2,19 @@ import { BiLogOut } from "react-icons/bi"
 import { useContext, useState } from "react"
 import { AppContext } from "@components/Context/AppContext"
 import { useRouter } from "next/router"
-import RemoveUserModal from "@components/Modal/RemoveUserModal"
+import EditProfilPage from "@components/Modal/EditProfilModal"
+import AuthorApplicationModal from "@components/Modal/AuthorApplicationModal"
 
 const UserActions = (props) => {
   const router = useRouter()
-  const { setShowModalAuthorApplication, setShowModalEdit, state } = props
+  const { userState } = props
   const { sessionUserId, logout } = useContext(AppContext)
-  const [showRemoveUser, setShowRemoveUser] = useState(false)
+  const [showModalEdit, setShowModalEdit] = useState(false)
+  const [showModalAuthorApplication, setShowModalAuthorApplication] =
+    useState(false)
 
   const isOwnerProfile = () => {
-    return Number(state.id) === Number(sessionUserId)
+    return Number(userState.id) === Number(sessionUserId)
   }
 
   const onLogout = () => {
@@ -24,33 +27,30 @@ const UserActions = (props) => {
 
   return (
     <div>
-      {showRemoveUser ? (
-        <RemoveUserModal toggleModal={setShowRemoveUser} userInfo={state} />
-      ) : null}
       <ul className="sm:w-full lg:mt-2 text-center text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg dark:border-gray-600 dark:text-black">
-        <li className="w-full px-4 py-2 border-b border-sky-200 dark:border-gray-600 hover:text-gray-500">
-          <span
-            className="hover:cursor-pointer hover:text-gray-900"
-            onClick={() => {
-              setShowModalEdit(true)
-            }}
-          >
-            Edit Profil
-          </span>
-        </li>
-        {isOwnerProfile() && state.right === "reader" ? (
+        {!isOwnerProfile() ? null : (
           <li className="w-full px-4 py-2 border-b border-sky-200 dark:border-gray-600 hover:text-gray-500">
-            <a
-              href="#"
+            <span
+              className="hover:cursor-pointer hover:text-gray-900"
               onClick={() => {
-                setShowModalAuthorApplication(true)
+                setShowModalEdit(true)
               }}
             >
-              Want to be an author ?
-            </a>
+              Edit Profil
+            </span>
+          </li>
+        )}
+        {isOwnerProfile() && userState.right === "reader" ? (
+          <li
+            className="w-full px-4 py-2 border-b border-sky-200 dark:border-gray-600 hover:text-gray-500 hover:cursor-pointer"
+            onClick={() => {
+              setShowModalAuthorApplication(true)
+            }}
+          >
+            Want to be an author ?
           </li>
         ) : null}
-        {isOwnerProfile() ? (
+        {!isOwnerProfile() ? null : (
           <li className="w-full px-4 py-2 rounded-b-lg flex justify-around">
             <span
               className="hover:text-red-700 active:text-red-800 hover:cursor-pointer"
@@ -59,8 +59,17 @@ const UserActions = (props) => {
               <BiLogOut size={25} />
             </span>
           </li>
-        ) : null}
+        )}
       </ul>
+      {showModalAuthorApplication ? (
+        <AuthorApplicationModal
+          {...props}
+          toggleModal={setShowModalAuthorApplication}
+        />
+      ) : null}
+      {showModalEdit ? (
+        <EditProfilPage {...props} toggleModal={setShowModalEdit} />
+      ) : null}
     </div>
   )
 }

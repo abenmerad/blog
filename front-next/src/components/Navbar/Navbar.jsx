@@ -2,37 +2,36 @@ import { MdAccountCircle } from "react-icons/md"
 import NavbarField from "./NavbarField.jsx"
 import { useContext } from "react"
 import { AppContext } from "@components/Context/AppContext.jsx"
-import useApi from "src/hooks/useApi.js"
-import { BiMessageAltDetail } from "react-icons/bi"
+import { MdOutlineMessage } from "react-icons/md"
 import { MdAdminPanelSettings } from "react-icons/md"
-const Navbar = () => {
-  const { jwt, sessionUserId } = useContext(AppContext)
-  const [err, data] = useApi("get", `/users/${sessionUserId}`)
 
-  return (
+const Navbar = () => {
+  const { sessionUserId, sessionRightUser } = useContext(AppContext)
+
+  return typeof window === "undefined" ? null : (
     <nav className="flex items-center flex-wrap bg-stone-700 p-3">
       <NavbarField href="/">
-        <span className="text-xl text-white font-bold uppercase tracking-wide">
+        <div className="text-xl text-white font-bold uppercase tracking-wide">
           Groundblog
-        </span>
+        </div>
       </NavbarField>
       <div className="w-full lg:inline-flex lg:flex-grow lg:w-auto">
         <div className="lg:inline-flex lg:flex-row lg:ml-auto lg:w-auto w-full lg:items-center items-center  flex flex-col lg:h-auto">
-          {jwt && data.right !== "reader" ? (
+          {sessionRightUser && sessionRightUser !== "reader" ? (
             <NavbarField href="/posts/write">
-              <BiMessageAltDetail size={16} />
+              <MdOutlineMessage size={16} />
             </NavbarField>
           ) : null}
-          {jwt && data.right === "admin" ? (
+          {sessionRightUser && sessionRightUser === "admin" ? (
             <NavbarField href="/admin/panel">
-              <MdAdminPanelSettings className="text-white" size={16} />
+              <MdAdminPanelSettings size={16} />
             </NavbarField>
           ) : null}
           <NavbarField
             href={
-              !jwt
+              !sessionUserId
                 ? "/authentication/sign-in"
-                : `/users/profil/${[sessionUserId]}`
+                : `/users/profil/${sessionUserId}`
             }
           >
             <MdAccountCircle size={32} />
@@ -42,5 +41,4 @@ const Navbar = () => {
     </nav>
   )
 }
-
 export default Navbar

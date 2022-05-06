@@ -4,13 +4,24 @@ import { ImCross } from "react-icons/im"
 import Link from "next/link"
 import { makeClient } from "@services/makeClient"
 import { AppContext } from "@components/Context/AppContext"
-import { useState, useContext } from "react"
+import { useState, useContext, useEffect } from "react"
+import Router from "next/router"
+import ErrorBox from "@components/Misc/ErrorBox"
 
 const AdminPanel = () => {
   const [err, data] = useApi("get", "/applications")
   const [applicationState, setApplicationState] = useState(data)
 
-  const { jwt } = useContext(AppContext)
+  const { jwt, sessionRightUser } = useContext(AppContext)
+  useEffect(() => {
+    !sessionRightUser || sessionRightUser !== "admin"
+      ? Router.push("/")
+      : setApplicationState(data)
+  }, [])
+
+  useEffect(() => {
+    setApplicationState(data)
+  }, [data])
 
   const sendApplication = async (validated, applicationId) => {
     try {
@@ -25,12 +36,17 @@ const AdminPanel = () => {
         setApplicationState(data)
       }
     } catch (err) {
-      console.log({ err })
+      res.status(400).send({ message: err.message })
     }
   }
-  return (
+
+  return err ? (
+    <ErrorBox message={data.message} />
+  ) : (
     <div className="flex flex-col">
-      {applicationState.length ? (
+      {!applicationState.length ? (
+        <ErrorBox message="Any author application found for now... Come back later" />
+      ) : (
         <div className="overflow-x-auto sm:-mx-6 lg:-mx-8">
           <h2 className="text-3xl font-semibold text-center mt-5 leading-normal mt-0 mb-2 text-black-800">
             Pending Author Application
@@ -62,11 +78,16 @@ const AdminPanel = () => {
                 </thead>
                 <tbody>
                   {Object.values(applicationState).map((application) => (
-                    <tr className="bg-gray-100 border-b justify-start">
+                    <tr
+                      key={application.id}
+                      className="bg-gray-100 border-b justify-start"
+                    >
                       <td className="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap">
-                        <Link href={`/users/profil/${application.userId}`}>
-                          {application.author}
-                        </Link>
+                        <span>
+                          <Link href={`/users/profil/${application.userId}`}>
+                            {application.author}
+                          </Link>
+                        </span>
                       </td>
                       <td className="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap">
                         {application.applicationDate}
@@ -93,12 +114,6 @@ const AdminPanel = () => {
               </table>
             </div>
           </div>
-        </div>
-      ) : (
-        <div className="flex justify-center">
-          <p className="bg-amber-400 text-white text-center font-bold px-4 py-2 mt-5 w-1/2">
-            Any author application found for now... Come back later
-          </p>
         </div>
       )}
     </div>

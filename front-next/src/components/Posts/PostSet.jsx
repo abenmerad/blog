@@ -1,19 +1,28 @@
 import Post from "./Post"
 import useApi from "src/hooks/useApi"
 import ErrorBox from "@components/Misc/ErrorBox"
+import { v4 as uuidv4 } from "uuid"
+
 const SetPosts = (props) => {
-  const { userId } = props
-  const [err, data] = useApi(
-    "get",
-    `/posts/${typeof userId === "undefined" ? "" : userId}`
-  )
+  const { userId, isPublished = true, postState, setPostState } = props
+
+  const [err, data] = postState
+    ? [null, postState]
+    : useApi(
+        "get",
+        `${
+          typeof userId === "undefined"
+            ? "/posts/published"
+            : `/users/${userId}/posts/${isPublished ? "published" : "drafted"}`
+        }`
+      )
 
   return err ? (
-    <ErrorBox message={data.statusText} />
+    <ErrorBox message={data} />
   ) : (
     <div className="container mx-1/2 flex flex-wrap">
       {Object.values(data).map((post) => (
-        <Post key={post.id} state={post} />
+        <Post key={uuidv4()} {...post} {...props} />
       ))}
     </div>
   )

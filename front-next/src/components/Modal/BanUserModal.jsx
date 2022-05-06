@@ -2,14 +2,12 @@ import Button from "@components/Form/Button"
 import { useContext, useState } from "react"
 import { makeClient } from "@services/makeClient.js"
 import { AppContext } from "@components/Context/AppContext"
-import { useRouter } from "next/router"
 import ErrorBox from "@components/Misc/ErrorBox"
 
-const RemovePostModal = (props) => {
-  const { toggleModal, postInfo } = props
-  const { jwt, sessionUserId } = useContext(AppContext)
+const BanUserModal = (props) => {
+  const { toggleModal, userState, setUserState } = props
+  const { jwt, sessionUserId, logout } = useContext(AppContext)
   const [err, setError] = useState(null)
-  const router = useRouter()
 
   return (
     <>
@@ -17,7 +15,7 @@ const RemovePostModal = (props) => {
         <div className="relative w-auto my-6 mx-auto max-w-3xl">
           <div className="border-0 rounded-lg shadow-lg relative flex flex-col w-full bg-white outline-none focus:outline-none">
             <div className="flex items-start justify-between p-5 border-b border-solid border-slate-200 rounded-t">
-              <h3 className="text-3xl font-semibold">Remove post</h3>
+              <h3 className="text-3xl font-semibold">Ban user</h3>
             </div>
             {err ? <ErrorBox message={err} /> : null}
             <div className="relative p-6 flex-auto">
@@ -44,23 +42,15 @@ const RemovePostModal = (props) => {
                     const { data } = await makeClient({
                       headers: { authentication: jwt },
                       session: { sessionUserId },
-                    }).delete(`/posts/${postInfo.id}`)
-
-                    if (data) {
-                      toggleModal(false)
-                      router.push({
-                        pathname: "/",
-                        query: {
-                          messageInfo: "The post has been successfully deleted",
-                        },
-                      })
-                    }
+                    }).put(`/users/${userState.id}`, { rightId: 4 })
+                    toggleModal(false)
+                    setUserState(data)
                   } catch (err) {
-                    setError(err.statusText)
+                    setError(err.message)
                   }
                 }}
               >
-                I'm sure
+                Hell yeah
               </Button>
             </div>
           </div>
@@ -70,4 +60,4 @@ const RemovePostModal = (props) => {
     </>
   )
 }
-export default RemovePostModal
+export default BanUserModal

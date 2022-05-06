@@ -1,29 +1,28 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import AboutUs from "@components/Posts/AboutUs"
 import PostSection from "@components/Posts/PostSection"
 import ErrorBox from "@components/Misc/ErrorBox"
+import { makeClient } from "@services/makeClient"
 
 export const getServerSideProps = async (context) => {
   const { params } = context
   const { postId } = params
 
-  const resPost = await fetch(
-    process.env.NEXT_PUBLIC_API_BASE_URL + `/posts/${postId}`
-  )
-  const dataPost = await resPost.json()
+  const resPost = await makeClient().get(`/post/${postId}`)
+  const resComments = await makeClient().get(`/posts/${postId}/comments`)
 
-  const resComments = await fetch(
-    process.env.NEXT_PUBLIC_API_BASE_URL + `/posts/${postId}/comments`
-  )
-  const dataComments = await resComments.json()
   return {
-    props: { post: dataPost, comments: dataComments },
+    props: { post: resPost.data, comments: resComments.data },
   }
 }
 
 const PostPage = ({ post, comments }) => {
   const [postState, setPostState] = useState(post)
   const [error, setError] = useState(null)
+
+  useEffect(() => {
+    setPostState(post)
+  }, [])
   return error ? (
     <ErrorBox message={error} />
   ) : (

@@ -6,14 +6,14 @@ const useApi = (method, route, args = {}) => {
   const [result, setResult] = useState([null, args])
   const { jwt, sessionUserId } = useContext(AppContext)
   const deps = JSON.stringify(route)
-  console.log(route)
+
   useEffect(() => {
     ;(async () => {
       try {
         const { data } = await makeClient({
           headers: { authentication: jwt },
           session: { sessionUserId: sessionUserId },
-        })[method](...route.split(" "), args)
+        })[method](route, args)
 
         setResult([null, data])
       } catch (err) {

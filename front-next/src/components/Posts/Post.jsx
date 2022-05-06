@@ -1,19 +1,21 @@
 import Link from "next/link"
 import Image from "next/image"
-import { useContext, useEffect, useState } from "react"
-import { AppContext } from "@components/Context/AppContext"
 import Button from "@components/Form/Button"
 import { BsEyeFill } from "react-icons/bs"
 
 const Post = (props) => {
-  const [showEditPost, setShowEditPost] = useState(false)
-  const { state } = props
-  const { jwt, sessionUserId } = useContext(AppContext)
+  const { userState } = props
 
-  const isAuthor = (userId) => {
-    return Number(userId) === Number(sessionUserId)
+  const formattedDate = (date) => {
+    return new Date(date).toLocaleDateString("en-US", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      minute: "numeric",
+      hour: "numeric",
+      second: "numeric",
+    })
   }
-
   return (
     <section className="w-1/2 flex flex-col items-center px-3">
       <article className="flex flex-col shadow my-4">
@@ -22,23 +24,25 @@ const Post = (props) => {
         </div>
         <div className="bg-white flex flex-col justify-start p-6">
           <span className="text-3xl font-bold hover:text-gray-700 pb-4 flex">
-            {state.title}
+            {props.title}
           </span>
-          <p className="text-sm pb-8">
+          <div className="text-sm pb-8">
             By
             <Link
-              href={`/users/profil/${state.userId}`}
+              href={`/users/profil/${userState ? userState.id : props.userId}`}
               className="font-semibold hover:text-gray-800"
             >
-              {` ${state.author}`}
+              {` ${userState ? userState.displayName : props.author}`}
             </Link>
-            , {`Published on ${Date(state.createdAt)}`}
-          </p>
+            , {`${props.statePost} on ${formattedDate(props.createdAt)}`}
+          </div>
           <p className="pb-3">
-            <Link href={`/posts/${state.id}`}>
-              <Button className="bg-blue-400 hover:bg-blue-500 active:bg-blue-600 ml-3 rounded-full ">
-                <BsEyeFill />
-              </Button>
+            <Link href={`/posts/${props.id}`}>
+              <a>
+                <Button className="bg-sky-400 hover:bg-sky-500 active:bg-sky-600 ml-3 rounded-full">
+                  <BsEyeFill />
+                </Button>
+              </a>
             </Link>
           </p>
         </div>

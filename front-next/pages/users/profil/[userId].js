@@ -1,43 +1,25 @@
-import useApi from "src/hooks/useApi"
 import { useState, useEffect } from "react"
-
-import ErrorBox from "@components/Misc/ErrorBox"
-
 import UserProfile from "@components/Profile/UserProfile"
+import { makeClient } from "@services/makeClient"
 
 export const getServerSideProps = async (context) => {
   const { params } = context
   const { userId } = params
 
-  const resUser = await fetch(
-    process.env.NEXT_PUBLIC_API_BASE_URL + `/users/${userId}`
-  )
-  const dataUser = await resUser.json()
+  const { data } = await makeClient().get(`/users/${userId}`)
 
   return {
-    props: { user: dataUser },
+    props: { user: data },
   }
 }
 
 const ProfilPage = ({ user }) => {
-  console.log({ user })
-  const [err, data] = useApi("get", `/users/${user.id}`)
-  const [state, setState] = useState(data)
+  const [state, setState] = useState(user)
 
   useEffect(() => {
-    return () => {
-      setState([null, {}])
-    }
-  }, [])
+    setState(user)
+  }, [user])
 
-  useEffect(() => {
-    setState(data)
-  }, [data])
-
-  return err ? (
-    <ErrorBox message={err.statusText} />
-  ) : (
-    <UserProfile state={state} setState={setState} />
-  )
+  return <UserProfile userState={state} setUserState={setState} />
 }
 export default ProfilPage

@@ -1,12 +1,12 @@
 import { Formik } from "formik"
 import * as yup from "yup"
-import { useCallback, useContext, useState } from "react"
+import { useCallback, useContext, useState, useEffect } from "react"
 import Button from "@components/Form/Button.jsx"
 import FormField from "@components/Form/FormField.jsx"
 import { makeClient } from "@services/makeClient.js"
 import { AppContext } from "@components/Context/AppContext"
-import { useRouter } from "next/router"
 import Link from "next/link"
+import Router from "next/router"
 
 const initialValues = {
   email: "",
@@ -20,9 +20,16 @@ const validationSchema = yup.object().shape({
 
 const SignInForm = () => {
   const [error, setError] = useState(null)
-  const { login } = useContext(AppContext)
-  const router = useRouter()
+  const { login, jwt } = useContext(AppContext)
 
+  useEffect(() => {
+    if (jwt) {
+      Router.push({
+        pathname: "/",
+        query: { messageInfo: "You're already logged." },
+      })
+    }
+  }, [])
   const handleFormSubmit = useCallback(async ({ email, password }) => {
     setError(null)
 
@@ -32,9 +39,8 @@ const SignInForm = () => {
       if (!data.jwt) {
         throw new Error("Jwt is missing")
       }
-      console.log({ data })
       login(data)
-      router.push({
+      Router.push({
         pathname: "/",
         query: { messageInfo: "You have successfully logged in" },
       })

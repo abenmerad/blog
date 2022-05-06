@@ -24,10 +24,20 @@ const validationSchema = yup.object().shape({
 })
 
 const EditProfilPage = (props) => {
-  const { toggleModal, userInfo, setData } = props
+  const { toggleModal, userState, setUserState } = props
   const [error, setError] = useState(null)
   const { jwt, sessionUserId } = useContext(AppContext)
   const [showRemoveUser, setShowRemoveUser] = useState(false)
+
+  const checkReturnedErrorMessage = (valueToCheck) => {
+    if (valueToCheck.match(/email/)) {
+      return "Email not available."
+    }
+
+    if (valueToCheck.match(/displayName/)) {
+      return "Display name not available."
+    }
+  }
 
   const handleFormSubmit = useCallback(
     async ({ email, displayName, password }) => {
@@ -37,18 +47,20 @@ const EditProfilPage = (props) => {
         const { data } = await makeClient({
           headers: { authentication: jwt },
           session: { userId: sessionUserId },
-        }).put(`/users/${userInfo.id}`, {
-          email,
+        }).put(`/users/${userState.id}`, {
+          email: email || null,
           displayName,
           password,
-          userId: userInfo.id,
+          userId: userState.id,
         })
+
         toggleModal(false)
-        setData(data)
+        setUserState(data)
       } catch (err) {
         const { response: { data } = {} } = err
+
         if (data.message) {
-          setError(checkReturnedErrorMessage(data.message.nativeError.detail))
+          setError(checkReturnedErrorMessage(data.message))
 
           return
         }
@@ -64,11 +76,14 @@ const EditProfilPage = (props) => {
         {showRemoveUser ? (
           <RemoveUserModal
             toggleModal={setShowRemoveUser}
-            userInfo={userInfo}
+            userState={userState}
           />
         ) : null}
         <div className="relative w-auto my-6 mx-auto max-w-3xl">
           <div className="border-0 rounded-lg shadow-lg relative flex flex-col w-full bg-white outline-none focus:outline-none">
+            <div className="flex items-start justify-between p-5 border-b border-solid border-slate-200 rounded-t">
+              <h3 className="text-3xl font-semibold">Edit profil</h3>
+            </div>
             <div className="relative p-6 flex-auto">
               <Formik
                 onSubmit={handleFormSubmit}
@@ -145,6 +160,9 @@ const EditProfilPage = (props) => {
         </div>
       </div>
       <div className="opacity-25 fixed inset-0 z-40 bg-black"></div>
+      {showRemoveUser ? (
+        <RemoveUserModal {...props} toggleModal={setShowRemoveUser} />
+      ) : null}
     </>
   )
 }

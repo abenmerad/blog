@@ -5,6 +5,8 @@ import Button from "@components/Form/Button.jsx"
 import FormField from "@components/Form/FormField.jsx"
 import { makeClient } from "@services/makeClient.js"
 import { AppContext } from "@components/Context/AppContext"
+import Link from "next/link"
+
 const initialValues = {
   content: "",
 }
@@ -18,8 +20,9 @@ const CommentForm = (props) => {
   const { jwt, sessionUserId } = useContext(AppContext)
   const { postState, setCommentState } = props
 
-  const handleFormSubmit = useCallback(async ({ content }) => {
+  const handleFormSubmit = useCallback(async ({ content }, { resetForm }) => {
     setError(null)
+
     try {
       const { data } = await makeClient({
         headers: { authentication: jwt },
@@ -29,7 +32,6 @@ const CommentForm = (props) => {
         userId: sessionUserId,
         postId: postState.id,
       })
-
       if (data) {
         const { data } = await makeClient().get(
           `/posts/${postState.id}/comments`
@@ -41,8 +43,21 @@ const CommentForm = (props) => {
 
       setError(data)
     }
+    resetForm()
   }, [])
-  return (
+
+  return !jwt ? (
+    <div className="flex justify-center items-center mt-5 w-full">
+      <div className="px-7 w-[700px] rounded-[12px] bg-white p-4">
+        <p className="px-3 text-center text-sm py-1 mt-5 outline-none border-pink-300 w-full resize-none border rounded-lg placeholder:text-sm">
+          <span className="text-sky-500 underline ">
+            <Link href={"/authentication/sign-in"}>Sign-in</Link>
+          </span>
+          <span> to leave your comment</span>
+        </p>
+      </div>
+    </div>
+  ) : (
     <div className="shadow-md w-full flex flex-col items-center px-3">
       <Formik
         onSubmit={handleFormSubmit}

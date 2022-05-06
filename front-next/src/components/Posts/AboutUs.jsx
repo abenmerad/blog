@@ -8,6 +8,10 @@ const AboutUs = () => {
           of curiosity, a desire to share and a passion for meeting people can
           publish, comment and discuss with people from all over the world.
         </p>
+        <p>
+          Nota Bene: This platform was developed to compete with our eternal
+          enemy Skyblog
+        </p>
       </div>
     </aside>
   )
